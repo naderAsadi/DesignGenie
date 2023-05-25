@@ -1,0 +1,17 @@
+name: 'demo'
+project: 'DesignGenie'
+method: grid
+program: demo_controlnet.py
+
+parameters:
+  controlnet_name:
+    values: ["mlsd", "hed", "soft_edge"]
+  num_inference_steps:
+    values: [20]
+  n_outputs:
+    values: [5]
+  
+  wandb:
+    value: 1
+  exp_name:
+    value: "demo"
