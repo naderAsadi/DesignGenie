@@ -47,7 +47,7 @@ def parser():
     parser.add_argument("--num_inference_steps", type=int, default=20)
     parser.add_argument("--n_outputs", type=int, default=4)
     parser.add_argument("--wandb_project", type=str, default="DesignGenie")
-    parser.add_argument("--wandb", type=bool, default=True)
+    parser.add_argument("--wandb", type=int, default=1)
     parser.add_argument("--exp_name", type=str, default="demo")
     args = parser.parse_args()
 

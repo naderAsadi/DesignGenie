@@ -42,14 +42,15 @@ def main(args):
         for idx in range(len(output))
     ]
 
-    logger = WandBLogger(config=args)
-    logger.log_images(
-        logs={
-            "generated_images": output_images,
-            "original_images": controlnet.images,
-            "control_images": controlnet.control_images,
-        }
-    )
+    if args.wandb:
+        logger = WandBLogger(config=args)
+        logger.log_images(
+            logs={
+                "generated_images": output_images,
+                "original_images": controlnet.images,
+                "control_images": controlnet.control_images,
+            }
+        )
 
 
 if __name__ == "__main__":
