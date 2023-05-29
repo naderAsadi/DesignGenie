@@ -97,7 +97,7 @@ class ControlNetPipeline:
         prompts: List[str],
         negative_prompt: str,
         n_outputs: Optional[int] = 1,
-        num_inference_steps: Optional[int] = 20,
+        num_inference_steps: Optional[int] = 30,
     ):
         "Generate images from `prompts` using `control_images` and `negative_prompt`."
 
