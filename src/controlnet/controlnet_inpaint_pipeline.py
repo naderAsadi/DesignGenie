@@ -19,7 +19,9 @@ from .controlnet_pipeline import ControlNetPipeline
 
 
 class ControlNetInpaintPipeline:
-    def __init__(self, controlnet_name: str, images_path: str, sd_model: Optional[str] = None):
+    def __init__(
+        self, controlnet_name: str, images_path: str, sd_model: Optional[str] = None
+    ):
         self.controlnet_name = controlnet_name
         self.images_path = images_path
 
@@ -33,7 +35,9 @@ class ControlNetInpaintPipeline:
             CONTROLNET_MODELS[controlnet_name]["controlnet"], torch_dtype=torch.float16
         )
         pipe = StableDiffusionControlNetInpaintPipeline.from_pretrained(
-            "runwayml/stable-diffusion-inpainting", controlnet=controlnet, torch_dtype=torch.float16
+            "runwayml/stable-diffusion-inpainting",
+            controlnet=controlnet,
+            torch_dtype=torch.float16,
         )
 
         pipe.scheduler = UniPCMultistepScheduler.from_config(pipe.scheduler.config)
@@ -50,4 +54,3 @@ class ControlNetInpaintPipeline:
         num_inference_steps: Optional[int] = 30,
     ):
         raise NotImplementedError()
-
