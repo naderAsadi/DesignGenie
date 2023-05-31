@@ -1,1 +1,0 @@
-from .controlnet_pipeline import ControlNetPipeline
