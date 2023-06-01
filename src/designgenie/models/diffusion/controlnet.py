@@ -1,16 +1,39 @@
-from typing import List, Optional, Tuple, Union
+from typing import Any, List, Optional, Tuple, Union
 import itertools
 from PIL import Image
 import numpy as np
 import torch
 
+from controlnet_aux import MLSDdetector, PidiNetDetector, HEDdetector
 from diffusers import (
     ControlNetModel,
     StableDiffusionControlNetPipeline,
     UniPCMultistepScheduler,
 )
 
-from . import CONTROLNET_MODEL_DICT as MODEL_DICT
+
+MODEL_DICT = {
+    "mlsd": {
+        "name": "lllyasviel/Annotators",
+        "detector": MLSDdetector,
+        "model": "lllyasviel/control_v11p_sd15_mlsd",
+    },
+    "soft_edge": {
+        "name": "lllyasviel/Annotators",
+        "detector": PidiNetDetector,
+        "model": "lllyasviel/control_v11p_sd15_softedge",
+    },
+    "hed": {
+        "name": "lllyasviel/Annotators",
+        "detector": HEDdetector,
+        "model": "lllyasviel/sd-controlnet-hed",
+    },
+    "scribble": {
+        "name": "lllyasviel/Annotators",
+        "detector": HEDdetector,
+        "model": "lllyasviel/control_v11p_sd15_scribble",
+    },
+}
 
 
 class StableDiffusionControlNet:
@@ -32,7 +55,7 @@ class StableDiffusionControlNet:
             MODEL_DICT[control_model_name]["name"]
         )
         self.pipe = self.create_pipe(
-            sd_model_name=sd_model_name, controlnet_name=control_model_name
+            sd_model_name=sd_model_name, control_model_name=control_model_name
         )
 
     def _repeat(self, items: List[Any], n: int) -> List[Any]:

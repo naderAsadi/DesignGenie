@@ -1,5 +1,5 @@
 from typing import Any, List, Optional, Tuple, Union
-from pathlib import Path
+import os
 from PIL import Image
 from random import randint, choices
 
@@ -58,7 +58,7 @@ class ImageFolderDataset(Dataset):
         return images_paths, prompts
 
     def __len__(self) -> int:
-        return len(self.images)
+        return len(self.images_paths)
 
     def __getitem__(self, idx: int) -> Tuple[Image.Image, Union[None, str]]:
         image = load_image(self.images_paths[idx]).resize(self.image_size)

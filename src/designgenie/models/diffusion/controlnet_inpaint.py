@@ -9,8 +9,7 @@ from diffusers import (
     UniPCMultistepScheduler,
 )
 
-from . import CONTROLNET_MODEL_DICT as MODEL_DICT
-from .controlnet_pipeline import StableDiffusionControlNet
+from .controlnet import StableDiffusionControlNet, MODEL_DICT
 
 
 class StableDiffusionControlNetInpaint(StableDiffusionControlNet):

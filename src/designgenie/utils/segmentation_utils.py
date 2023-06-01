@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
 import requests
+import torch
 from torch import nn
 
 
@@ -26,7 +27,7 @@ def visualize_segmentation_map(semantic_map: torch.Tensor) -> Image.Image:
 
 def get_masks_from_segmentation_map(
     semantic_map: torch.Tensor,
-) -> Tuple[List[np.Array], List[int], List[str]]:
+) -> Tuple[List[np.array], List[int], List[str]]:
     masks = []
     labels = []
     obj_names = []

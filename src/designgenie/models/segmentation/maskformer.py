@@ -1,3 +1,4 @@
+from typing import Any, List, Optional, Tuple, Union
 from PIL import Image
 import numpy as np
 import torch
@@ -33,8 +34,8 @@ class MaskFormer:
         )
 
     def process(self, images: List[Image.Image]):
-        inputs = processor(images=images, return_tensors="pt")
-        outputs = model(**inputs)
+        inputs = self.processor(images=images, return_tensors="pt")
+        outputs = self.model(**inputs)
         # model predicts class_queries_logits of shape `(batch_size, num_queries)`
         # and masks_queries_logits of shape `(batch_size, num_queries, height, width)`
         class_queries_logits = outputs.class_queries_logits
@@ -42,7 +43,7 @@ class MaskFormer:
 
         # you can pass them to processor for postprocessing
         # we refer to the demo notebooks for visualization (see "Resources" section in the MaskFormer docs)
-        predicted_semantic_maps = processor.post_process_semantic_segmentation(
+        predicted_semantic_maps = self.processor.post_process_semantic_segmentation(
             outputs, target_sizes=[image.size[::-1] * len(images)]
         )
 
