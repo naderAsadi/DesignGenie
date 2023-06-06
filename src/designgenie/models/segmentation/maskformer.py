@@ -44,7 +44,7 @@ class MaskFormer:
         # you can pass them to processor for postprocessing
         # we refer to the demo notebooks for visualization (see "Resources" section in the MaskFormer docs)
         predicted_semantic_maps = self.processor.post_process_semantic_segmentation(
-            outputs, target_sizes=[image.size[::-1] * len(images)]
+            outputs, target_sizes=[images[0].size[::-1] * len(images)]
         )
 
         return predicted_semantic_maps

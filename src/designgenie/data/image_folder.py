@@ -4,8 +4,8 @@ from PIL import Image
 from random import randint, choices
 
 import torch
-import torchvision
 from torch.utils.data import Dataset
+import torchvision.transforms as transforms
 from diffusers.utils import load_image
 
 
@@ -37,6 +37,12 @@ class ImageFolderDataset(Dataset):
             images_root=images_root, extensions=extensions, prompts_path=prompts_path
         )
 
+        self.transform = transforms.Compose(
+            [
+                transforms.ToTensor(),
+            ]
+        )
+
     def _make_dataset(
         self,
         images_root: str,
@@ -63,5 +69,8 @@ class ImageFolderDataset(Dataset):
     def __getitem__(self, idx: int) -> Tuple[Image.Image, Union[None, str]]:
         image = load_image(self.images_paths[idx]).resize(self.image_size)
         prompt = self.prompts[idx] if self.prompts is not None else None
+
+        if self.transform is not None:
+            image = self.transform(image)
 
         return image, prompt

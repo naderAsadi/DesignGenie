@@ -1,6 +1,7 @@
 from typing import Any, Dict, List, Optional, Tuple, Union
 import torch
 from torch.utils.data import DataLoader
+import torchvision.transforms as transforms
 
 from ..data import ImageFolderDataset
 from ..models import create_diffusion_model, create_segmentation_model
@@ -15,7 +16,7 @@ class InpaintPipeline:
         control_model_name: str,
         images_root: str,
         prompts_path: Optional[str] = None,
-        sd_model_name: Optional[str] = "runwayml/stable-diffusion-v1-5",
+        sd_model_name: Optional[str] = "runwayml/stable-diffusion-inpainting",
         image_size: Optional[Tuple[int, int]] = (512, 512),
         image_extensions: Optional[Tuple[str]] = (".jpg", ".jpeg", ".png", ".webp"),
         segmentation_model_size: Optional[str] = "large",
@@ -49,24 +50,28 @@ class InpaintPipeline:
         dataset = ImageFolderDataset(
             images_root, prompts_path, image_size, image_extensions
         )
-        # data_loader = DataLoader(
-        #     dataset, batch_size=batch_size, shuffle=False, num_workers=8
-        # )
+        data_loader = DataLoader(
+            dataset, batch_size=batch_size, shuffle=False, num_workers=8
+        )
 
-        return dataset
+        return data_loader
 
     def run(self, data_loader: Optional[DataLoader] = None) -> List[Dict[str, Any]]:
         if data_loader is not None:
             self.data_loader = data_loader
 
         results = []
-        for idx, (prompts, images) in enumerate(self.data_loader):
-            print(images)
+        for idx, (images, prompts) in enumerate(self.data_loader):
+            images = [
+                transforms.ToPILImage()(images[idx, ...])
+                for idx in range(images.size(0))
+            ]
             semantic_maps = self.segmentation_model.process(images)
             object_masks = [
-                get_object_mask(seg_map, class_id) for seg_map in semantic_maps
+                get_object_mask(seg_map, class_id=0) for seg_map in semantic_maps
             ]
 
             outputs = self.diffusion_model.process(
-                images=images, prompts=prompts, mask_images=object_masks
+                images=images, prompts=[prompts[0]], mask_images=object_masks,
+                negative_prompt="monochrome, lowres, bad anatomy, worst quality, low quality"
             )
