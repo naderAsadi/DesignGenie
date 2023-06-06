@@ -37,11 +37,7 @@ class ImageFolderDataset(Dataset):
             images_root=images_root, extensions=extensions, prompts_path=prompts_path
         )
 
-        self.transform = transforms.Compose(
-            [
-                transforms.ToTensor(),
-            ]
-        )
+        self.to_tensor = transforms.ToTensor()
 
     def _make_dataset(
         self,
@@ -70,7 +66,4 @@ class ImageFolderDataset(Dataset):
         image = load_image(self.images_paths[idx]).resize(self.image_size)
         prompt = self.prompts[idx] if self.prompts is not None else None
 
-        if self.transform is not None:
-            image = self.transform(image)
-
-        return image, prompt
+        return self.to_tensor(image), prompt

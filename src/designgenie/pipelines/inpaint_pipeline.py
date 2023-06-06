@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Optional, Tuple, Union
 import torch
 from torch.utils.data import DataLoader
-import torchvision.transforms as transforms
+from torchvision.transforms.functional import to_pil_image
 
 from ..data import ImageFolderDataset
 from ..models import create_diffusion_model, create_segmentation_model
@@ -62,16 +62,17 @@ class InpaintPipeline:
 
         results = []
         for idx, (images, prompts) in enumerate(self.data_loader):
-            images = [
-                transforms.ToPILImage()(images[idx, ...])
-                for idx in range(images.size(0))
-            ]
+            images = [to_pil_image(img) for img in images]
+
             semantic_maps = self.segmentation_model.process(images)
+
             object_masks = [
                 get_object_mask(seg_map, class_id=0) for seg_map in semantic_maps
             ]
 
             outputs = self.diffusion_model.process(
-                images=images, prompts=[prompts[0]], mask_images=object_masks,
-                negative_prompt="monochrome, lowres, bad anatomy, worst quality, low quality"
+                images=images,
+                prompts=[prompts[0]],
+                mask_images=object_masks,
+                negative_prompt="monochrome, lowres, bad anatomy, worst quality, low quality",
             )

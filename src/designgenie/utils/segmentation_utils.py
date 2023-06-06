@@ -5,7 +5,7 @@ from PIL import Image
 import requests
 import torch
 from torch import nn
-import torchvision.transforms as transforms
+from torchvision.transforms.functional import to_pil_image
 
 
 def visualize_segmentation_map(semantic_map: torch.Tensor) -> Image.Image:
@@ -55,9 +55,9 @@ def get_object_mask(
     mask = masks[labels.index(class_id)]
     object_mask = np.logical_not(mask).astype(int)
     object_mask = torch.Tensor(object_mask).repeat(3, 1, 1)
-    print(object_mask.shape)
+
     if not return_tensors:
-        object_mask = transforms.ToPILImage()(object_mask)
+        object_mask = to_pil_image(object_mask)
 
     return object_mask
 
