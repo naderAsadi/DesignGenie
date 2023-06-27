@@ -8,7 +8,7 @@ from torch import nn
 from torchvision.transforms.functional import to_pil_image
 
 
-def visualize_segmentation_map(semantic_map: torch.Tensor) -> Image.Image:
+def visualize_segmentation_map(semantic_map: torch.Tensor, original_image: Image.Image) -> Image.Image:
     # Convert to RGB
     color_seg = np.zeros(
         (semantic_map.shape[0], semantic_map.shape[1], 3), dtype=np.uint8
@@ -20,7 +20,7 @@ def visualize_segmentation_map(semantic_map: torch.Tensor) -> Image.Image:
     color_seg = color_seg[..., ::-1]
 
     # Show image + mask
-    img = np.array(image) * 0.5 + color_seg * 0.5
+    img = np.array(original_image) * 0.5 + color_seg * 0.5
     img = img.astype(np.uint8)
 
     return Image.fromarray(img)

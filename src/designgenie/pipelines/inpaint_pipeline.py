@@ -69,10 +69,13 @@ class InpaintPipeline:
             object_masks = [
                 get_object_mask(seg_map, class_id=0) for seg_map in semantic_maps
             ]
-
+            print(prompts)
             outputs = self.diffusion_model.process(
                 images=images,
                 prompts=[prompts[0]],
                 mask_images=object_masks,
                 negative_prompt="monochrome, lowres, bad anatomy, worst quality, low quality",
             )
+            results += outputs
+
+        return results
