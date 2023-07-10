@@ -76,6 +76,6 @@ class InpaintPipeline:
                 mask_images=object_masks,
                 negative_prompt="monochrome, lowres, bad anatomy, worst quality, low quality",
             )
-            results += outputs
+            results += outputs["output_images"]
 
         return results

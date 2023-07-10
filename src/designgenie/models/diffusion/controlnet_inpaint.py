@@ -97,7 +97,7 @@ class StableDiffusionControlNetInpaint(StableDiffusionControlNet):
 
         generator = [
             torch.Generator(device="cuda").manual_seed(int(i))
-            for i in np.random.randint(len(prompts), size=len(prompts))
+            for i in np.random.randint(max(len(prompts), 16), size=len(prompts))
         ]
 
         output = self.pipe(
@@ -115,4 +115,8 @@ class StableDiffusionControlNetInpaint(StableDiffusionControlNet):
             for idx in range(len(images) // n_outputs)
         ]
 
-        return output_images
+        return {
+            "output_images": output_images,
+            "control_images": control_images,
+            "mask_images": mask_images,
+        }

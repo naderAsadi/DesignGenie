@@ -18,6 +18,6 @@ from src.designgenie.interfaces import GradioApp
 #         for j, image in enumerate(images):
 #             image.save(f"./assets/results/result_{i}_{j}.png")
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app = GradioApp()
     app.interface.launch(share=True)

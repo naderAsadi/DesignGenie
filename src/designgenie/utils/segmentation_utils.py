@@ -1,4 +1,5 @@
 from typing import Any, List, Optional, Tuple, Union
+from functools import reduce
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
@@ -8,7 +9,9 @@ from torch import nn
 from torchvision.transforms.functional import to_pil_image
 
 
-def visualize_segmentation_map(semantic_map: torch.Tensor, original_image: Image.Image) -> Image.Image:
+def visualize_segmentation_map(
+    semantic_map: torch.Tensor, original_image: Image.Image
+) -> Image.Image:
     # Convert to RGB
     color_seg = np.zeros(
         (semantic_map.shape[0], semantic_map.shape[1], 3), dtype=np.uint8
@@ -47,12 +50,27 @@ def get_masks_from_segmentation_map(
     return masks, labels, obj_names
 
 
+def get_mask_from_coordinates(
+    segmentation_maps: List[np.array], coordinates: Tuple[int, int]
+):
+    masks = []
+    for seg_map in segmentation_maps:
+        for coordinate in coordinates:
+            if seg_map[coordinate] == 0:
+                masks.append(seg_map)
+
+    return reduce(np.multiply, masks)
+
+
 def get_object_mask(
-    semantic_map: torch.Tensor, class_id: int, return_tensors: bool = False
+    semantic_map: torch.Tensor,
+    coordinates: List[Tuple[int, int]],
+    return_tensors: bool = False,
 ) -> Union[torch.Tensor, Image.Image]:
     masks, labels, obj_names = get_masks_from_segmentation_map(semantic_map)
 
-    mask = masks[labels.index(class_id)]
+    mask = get_mask_from_coordinates(masks, coordinates)
+
     object_mask = np.logical_not(mask).astype(int)
     object_mask = torch.Tensor(object_mask).repeat(3, 1, 1)
 
