@@ -15,8 +15,7 @@ from ..utils import (
 
 
 # points color and marker
-COLORS = [(255, 0, 0), (0, 255, 0)]
-MARKERS = [1, 5]
+COLOR = (255, 0, 0)
 
 @dataclass
 class AppState:
@@ -87,10 +86,19 @@ class GradioApp:
     def clear_coordinates(self):
         self._state.input_coordinates = []
 
-    def get_coordinates(self, event: gr.SelectData):
+    def get_coordinates(self, event: gr.SelectData, input_image: Image.Image):
         w, h = tuple(event.index)
         self._state.input_coordinates.append((h, w))
         print(self._state.input_coordinates)
+
+        return Image.fromarray(
+            cv2.drawMarker(np.asarray(input_image), 
+                event.index, 
+                COLOR, 
+                markerSize=20, 
+                thickness=5
+            )
+        )
 
     def build_interface(self):
         """Builds the Gradio interface for the DesignGenie app."""
@@ -131,7 +139,7 @@ class GradioApp:
                 with gr.Column():
                     # --> Input Image and Segmentation <--
                     input_image = gr.Image(label="Input Image", type="pil")
-                    input_image.select(self.get_coordinates)
+                    input_image.select(self.get_coordinates, inputs=[input_image], outputs=[input_image])
                     input_image.upload(
                         self.image_change, inputs=[input_image], outputs=[input_image]
                     )
