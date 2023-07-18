@@ -1,17 +1,27 @@
 from typing import Any, List, Optional, Tuple, Union
 from functools import reduce
 import numpy as np
-import matplotlib.pyplot as plt
 from PIL import Image
 import requests
 import torch
 from torch import nn
+import torchvision.transforms as transforms
 from torchvision.transforms.functional import to_pil_image
 
 
 def visualize_segmentation_map(
     semantic_map: torch.Tensor, original_image: Image.Image
 ) -> Image.Image:
+    """
+    Visualizes a segmentation map by overlaying it on the original image.
+
+    Args:
+        semantic_map (torch.Tensor): Segmentation map tensor.
+        original_image (Image.Image): Original image.
+
+    Returns:
+        Image.Image: Overlay image with segmentation map.
+    """
     # Convert to RGB
     color_seg = np.zeros(
         (semantic_map.shape[0], semantic_map.shape[1], 3), dtype=np.uint8
@@ -32,6 +42,15 @@ def visualize_segmentation_map(
 def get_masks_from_segmentation_map(
     semantic_map: torch.Tensor,
 ) -> Tuple[List[np.array], List[int], List[str]]:
+    """
+    Extracts masks, labels, and object names from a segmentation map.
+
+    Args:
+        semantic_map (torch.Tensor): Segmentation map tensor.
+
+    Returns:
+        Tuple[List[np.array], List[int], List[str]]: Tuple containing masks, labels, and object names.
+    """
     masks = []
     labels = []
     obj_names = []
@@ -53,6 +72,16 @@ def get_masks_from_segmentation_map(
 def get_mask_from_coordinates(
     segmentation_maps: List[np.array], coordinates: Tuple[int, int]
 ):
+    """
+    Retrieves a mask from a list of segmentation maps based on given coordinates.
+
+    Args:
+        segmentation_maps (List[np.array]): List of segmentation maps.
+        coordinates (Tuple[int, int]): Coordinates to filter the masks.
+
+    Returns:
+        np.array: Combined mask from the segmentation maps.
+    """
     masks = []
     for seg_map in segmentation_maps:
         for coordinate in coordinates:
@@ -62,22 +91,39 @@ def get_mask_from_coordinates(
     return reduce(np.multiply, masks)
 
 
-def get_object_mask(
+def get_masked_images(
+    control_image: Image.Image,
     semantic_map: torch.Tensor,
     coordinates: List[Tuple[int, int]],
     return_tensors: bool = False,
 ) -> Union[torch.Tensor, Image.Image]:
+    """
+    Retrieves masked images based on given control image, segmentation map, and coordinates.
+
+    Args:
+        control_image (Image.Image): Control image.
+        semantic_map (torch.Tensor): Segmentation map tensor.
+        coordinates (List[Tuple[int, int]]): List of coordinates.
+        return_tensors (bool, optional): Whether to return masked images as tensors. Defaults to False.
+
+    Returns:
+        Union[torch.Tensor, Image.Image]: Masked image tensor or PIL image.
+    """
     masks, labels, obj_names = get_masks_from_segmentation_map(semantic_map)
 
     mask = get_mask_from_coordinates(masks, coordinates)
 
-    object_mask = np.logical_not(mask).astype(int)
-    object_mask = torch.Tensor(object_mask).repeat(3, 1, 1)
+    mask_image = np.logical_not(mask).astype(int)
+    mask_image = torch.Tensor(mask_image).repeat(3, 1, 1)
+
+    mask = torch.Tensor(mask).repeat(3, 1, 1)
+    control_image = transforms.ToTensor()(control_image)
+    masked_control_image = transforms.ToPILImage()(mask * control_image)
 
     if not return_tensors:
-        object_mask = to_pil_image(object_mask)
+        mask_image = to_pil_image(mask_image)
 
-    return object_mask
+    return mask_image, masked_control_image
 
 
 ADE_LABELS = requests.get(

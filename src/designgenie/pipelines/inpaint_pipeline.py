@@ -5,7 +5,7 @@ from torchvision.transforms.functional import to_pil_image
 
 from ..data import ImageFolderDataset
 from ..models import create_diffusion_model, create_segmentation_model
-from ..utils import get_object_mask
+from ..utils import get_masked_images
 
 
 class InpaintPipeline:
@@ -69,7 +69,7 @@ class InpaintPipeline:
             object_masks = [
                 get_object_mask(seg_map, class_id=0) for seg_map in semantic_maps
             ]
-            print(prompts)
+
             outputs = self.diffusion_model.process(
                 images=images,
                 prompts=[prompts[0]],

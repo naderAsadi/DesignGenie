@@ -8,7 +8,7 @@ import torch
 
 from ..models import create_diffusion_model, create_segmentation_model
 from ..utils import (
-    get_object_mask,
+    get_masked_images,
     visualize_segmentation_map,
     get_masks_from_segmentation_map,
 )
@@ -16,6 +16,7 @@ from ..utils import (
 
 # points color and marker
 COLOR = (255, 0, 0)
+
 
 @dataclass
 class AppState:
@@ -30,7 +31,7 @@ class AppState:
 class GradioApp:
     def __init__(self):
         self._interface = self.build_interface()
-        self._state = AppState()
+        self.state = AppState()
 
         self.segmentation_model = None
         self.diffusion_model = None
@@ -47,56 +48,67 @@ class GradioApp:
             )
 
         predicted_semantic_map = self.segmentation_model.process([image])[0]
-        self._state.predicted_semantic_map = predicted_semantic_map
+        self.state.predicted_semantic_map = predicted_semantic_map
 
         segmentation_map = visualize_segmentation_map(predicted_semantic_map, image)
         return segmentation_map
 
     def _generate_outputs(
-        self, prompt: str, model_name: str, n_outputs: int
+        self,
+        prompt: str,
+        model_name: str,
+        n_outputs: int,
+        inference_steps: int,
+        strength: float,
+        guidance_scale: float,
+        eta: float,
     ) -> Image.Image:
         if self.diffusion_model is None:
             self.diffusion_model = create_diffusion_model(
                 diffusion_model_name="controlnet_inpaint", control_model_name=model_name
             )
 
-        object_mask = get_object_mask(
-            self._state.predicted_semantic_map, self._state.input_coordinates
+        control_image = self.diffusion_model.generate_control_images(
+            images=[self.state.original_image]
+        )[0]
+
+        image_mask, masked_control_image = get_masked_images(
+            control_image,
+            self.state.predicted_semantic_map,
+            self.state.input_coordinates,
         )
 
         outputs = self.diffusion_model.process(
-            images=[self._state.original_image],
+            images=[self.state.original_image],
             prompts=[prompt],
-            mask_images=[object_mask],
+            mask_images=[image_mask],
+            control_images=[masked_control_image],
             negative_prompt="monochrome, lowres, bad anatomy, worst quality, low quality",
             n_outputs=n_outputs,
         )
 
         return (
             *outputs["output_images"][0],
-            outputs["control_images"][0],
-            outputs["mask_images"][0],
+            control_image,
+            image_mask,
         )
 
     def image_change(self, input_image):
         input_image = input_image.resize((768, 512))
-        self._state.original_image = input_image
+        self.state.original_image = input_image
         return input_image
 
     def clear_coordinates(self):
-        self._state.input_coordinates = []
+        self.state.input_coordinates = []
 
     def get_coordinates(self, event: gr.SelectData, input_image: Image.Image):
         w, h = tuple(event.index)
-        self._state.input_coordinates.append((h, w))
-        print(self._state.input_coordinates)
+        self.state.input_coordinates.append((h, w))
+        print(self.state.input_coordinates)
 
         return Image.fromarray(
-            cv2.drawMarker(np.asarray(input_image), 
-                event.index, 
-                COLOR, 
-                markerSize=20, 
-                thickness=5
+            cv2.drawMarker(
+                np.asarray(input_image), event.index, COLOR, markerSize=20, thickness=5
             )
         )
 
@@ -132,14 +144,27 @@ class GradioApp:
 
             # --> Model Parameters <--
             with gr.Accordion(label="Parameters", open=False):
-                with gr.Row():
-                    pass
+                with gr.Column():
+                    gr.Markdown("### Stable Diffusion Parameters")
+                    with gr.Row():
+                        with gr.Column():
+                            inference_steps = gr.Number(
+                                value=30, label="Number of inference steps."
+                            )
+                            strength = gr.Number(value=1.0, label="Strength.")
+                        with gr.Column():
+                            guidance_scale = gr.Number(value=7.5, label="Guidance scale.")
+                            eta = gr.Number(value=0.0, label="Eta.")
 
             with gr.Row().style(equal_height=False):
                 with gr.Column():
                     # --> Input Image and Segmentation <--
                     input_image = gr.Image(label="Input Image", type="pil")
-                    input_image.select(self.get_coordinates, inputs=[input_image], outputs=[input_image])
+                    input_image.select(
+                        self.get_coordinates,
+                        inputs=[input_image],
+                        outputs=[input_image],
+                    )
                     input_image.upload(
                         self.image_change, inputs=[input_image], outputs=[input_image]
                     )
@@ -192,7 +217,7 @@ class GradioApp:
                         ]
 
                     with gr.Tab(label="Control Images"):
-                        control_labels = ["Generated Mask", "Control Image"]
+                        control_labels = ["Control Image", "Generated Mask"]
                         control_images = [
                             gr.Image(interactive=False, label=label, type="pil")
                             for label in control_labels
@@ -200,7 +225,15 @@ class GradioApp:
 
                 submit_btn.click(
                     self._generate_outputs,
-                    inputs=[text, controlnet_model, num_outputs],
+                    inputs=[
+                        text,
+                        controlnet_model,
+                        num_outputs,
+                        inference_steps,
+                        strength,
+                        guidance_scale,
+                        eta,
+                    ],
                     outputs=output_images + control_images,
                 )
 

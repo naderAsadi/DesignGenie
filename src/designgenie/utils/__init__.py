@@ -1,5 +1,5 @@
 from .segmentation_utils import (
-    get_object_mask,
+    get_masked_images,
     visualize_segmentation_map,
     get_masks_from_segmentation_map,
 )

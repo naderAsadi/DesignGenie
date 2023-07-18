@@ -66,6 +66,9 @@ class StableDiffusionControlNetInpaint(StableDiffusionControlNet):
         negative_prompt: Optional[str] = None,
         n_outputs: Optional[int] = 1,
         num_inference_steps: Optional[int] = 30,
+        strength: Optional[float] = 1.0,
+        guidance_scale: Optional[float] = 7.5,
+        eta: Optional[float] = 0.0,
     ) -> List[List[Image.Image]]:
         """Inpaint images based on `prompts` using `control_images` and `mask_images`.
 
