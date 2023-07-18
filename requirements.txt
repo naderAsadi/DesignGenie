@@ -1,4 +1,11 @@
-gradio
-torch
-transformers
+accelerate
+controlnet-aux
 diffusers
+gradio
+numpy
+opencv-python
+torch
+torchvision
+transformers
+xformers
+wandb
